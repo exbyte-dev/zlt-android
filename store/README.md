@@ -31,9 +31,15 @@ the edges on some surfaces.
 
 ## Screenshots
 
-Taken from the app running in demo mode, so they show the real UI without
-needing the router. The demo banner is visible in them deliberately — the
-listing must not imply sample readings are live ones.
+A mix, and the distinction matters:
+
+- `status.png` is **demo mode**, and the demo banner is visible in it
+  deliberately — the listing must not imply sample readings are live ones.
+- `details.png` is a **real ZLT T10D MAX**, so it carries no banner, because
+  nothing about it is a sample.
+
+Never take the banner out of a demo shot to make it look tidier. The banner is
+the only thing distinguishing the two.
 
 ## Why the screenshots are 1200×2400
 
