@@ -72,7 +72,7 @@ private fun AppRoot(viewModel: RouterViewModel = viewModel()) {
     StatusScreen(
         state = state,
         host = current.host,
-        onRefresh = { viewModel.refresh(includeMode = true) },
+        onRefresh = { viewModel.refresh() },
         onOpenSettings = { settingsOpen = true },
         modeControl = {
             ModeControl(

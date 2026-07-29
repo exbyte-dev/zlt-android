@@ -10,26 +10,40 @@ import dev.zlt.companion.net.ZltProtocol
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+/** One poll's worth of everything the screen shows. */
+data class RouterSnapshot(
+    val status: RouterStatus,
+    /** Null when there was no session to read it with. */
+    val mode: NetModeState?,
+)
+
 /**
  * Owns the [ZltClient] and turns raw key/value reads into the app's models.
  *
  * The client is rebuilt whenever the saved credentials change, which also drops
  * the session cookie — the old one belongs to a different router.
+ *
+ * Takes a credentials provider rather than a [SettingsStore] so the whole class
+ * is exercisable on the JVM against a mock router. Use [from] to build one
+ * backed by the real settings.
  */
-class RouterRepository(private val settingsStore: SettingsStore) {
+class RouterRepository(
+    private val credentialsProvider: suspend () -> RouterCredentials,
+    private val clientFactory: (RouterCredentials) -> ZltClient = { ZltClient(it) },
+) {
 
     private val mutex = Mutex()
     private var cachedClient: ZltClient? = null
     private var cachedCredentials: RouterCredentials? = null
 
     private suspend fun client(): ZltClient {
-        val credentials = settingsStore.current().credentials()
+        val credentials = credentialsProvider()
         return mutex.withLock {
             val existing = cachedClient
             if (existing != null && cachedCredentials == credentials) {
                 existing
             } else {
-                ZltClient(credentials).also {
+                clientFactory(credentials).also {
                     cachedClient = it
                     cachedCredentials = credentials
                 }
@@ -38,20 +52,29 @@ class RouterRepository(private val settingsStore: SettingsStore) {
     }
 
     /**
-     * One status poll.
+     * One poll: signal, connection state and configured mode together.
      *
-     * Ported from `status` in zlt/cli.py: try for a session and read the full
-     * key set, and on a login problem fall back to the open keys with a note
-     * rather than failing outright. Losing RSRP, band and SNR still leaves a
-     * usable RSSI reading, which beats an error screen. A genuinely unreachable
-     * router propagates.
+     * The status keys and the network-mode keys go out as a single `proc_get`.
+     * They are all plain scalar keys and `multi_data` already joins as many as
+     * are asked for, so there is no protocol reason to make two round trips —
+     * and making two was a real bug. Reading the mode only on first load meant
+     * a mode changed from the router's own web UI never appeared here, which
+     * looks exactly like the app misreporting the signal.
+     *
+     * Falling back to the open keys when login fails is ported from cli.py:
+     * losing RSRP, band and SNR still leaves a usable RSSI reading, which beats
+     * an error screen. The mode is unreadable without a session, so it comes
+     * back null there rather than stale.
      */
-    suspend fun status(): RouterStatus {
+    suspend fun snapshot(): RouterSnapshot {
         val client = client()
         var note: String? = null
-        val data = try {
+        val full = try {
             client.ensureSession()
-            client.get(*(ZltProtocol.OPEN_KEYS + ZltProtocol.AUTHED_KEYS).toTypedArray())
+            client.get(
+                *(ZltProtocol.OPEN_KEYS + ZltProtocol.AUTHED_KEYS + ZltProtocol.NET_KEYS)
+                    .toTypedArray(),
+            )
         } catch (e: LoginFailed) {
             note = e.message
             null
@@ -59,17 +82,32 @@ class RouterRepository(private val settingsStore: SettingsStore) {
             note = e.message
             null
         }
-        if (data != null) return RouterStatus.from(data, authed = true, note = null)
 
-        val open = client.get(*ZltProtocol.OPEN_KEYS.toTypedArray())
-        return RouterStatus.from(open, authed = false, note = note)
-    }
+        if (full == null) {
+            val open = client.get(*ZltProtocol.OPEN_KEYS.toTypedArray())
+            return RouterSnapshot(
+                status = RouterStatus.from(open, authed = false, note = note),
+                mode = null,
+            )
+        }
 
-    /** The configured network mode. Needs a session. */
-    suspend fun mode(): NetModeState {
-        val client = client()
-        client.ensureSession()
-        return NetModeState.from(client.get(*ZltProtocol.NET_KEYS.toTypedArray()))
+        // If the device answered the status keys but dropped the mode keys
+        // entirely, it will not serve this many cmds in one read. Ask for them
+        // separately rather than silently reporting no mode. Note the test for
+        // *absence*: a key present but empty is a real answer ("nothing is
+        // configured") and must not trigger a second round trip every poll.
+        val mode = if (ZltProtocol.NET_KEYS.none { it in full }) {
+            runCatching { client.get(*ZltProtocol.NET_KEYS.toTypedArray()) }
+                .map { NetModeState.from(it) }
+                .getOrNull()
+        } else {
+            NetModeState.from(full)
+        }
+
+        return RouterSnapshot(
+            status = RouterStatus.from(full, authed = true, note = null),
+            mode = mode,
+        )
     }
 
     /**
@@ -94,5 +132,10 @@ class RouterRepository(private val settingsStore: SettingsStore) {
             )
         }
         return NetModeState.from(client.get(*ZltProtocol.NET_KEYS.toTypedArray()))
+    }
+
+    companion object {
+        fun from(settingsStore: SettingsStore): RouterRepository =
+            RouterRepository({ settingsStore.current().credentials() })
     }
 }

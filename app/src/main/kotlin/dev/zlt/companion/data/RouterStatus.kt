@@ -55,15 +55,31 @@ data class RouterStatus(
     val pci: String,
     val connection: ConnectionState,
 ) {
+    /** True when the router says it is not attached to any network at all. */
+    val hasService: Boolean get() = !networkType.trim().equals(NO_SERVICE, ignoreCase = true)
+
     companion object {
+        /**
+         * What `network_type` reads when the router has no network. Captured
+         * live, alongside a stale `rssi` of -91 and a stale `signalbar` of 4 —
+         * the device keeps handing back the last values it saw.
+         */
+        const val NO_SERVICE = "No Service"
+
         fun from(data: Map<String, String>, authed: Boolean, note: String?): RouterStatus {
             val rsrp = data.dbm("lte_rsrp")
             val rssi = data.dbm("rssi")
+            val networkType = data["network_type"].orEmpty()
+            val hasService = !networkType.trim().equals(NO_SERVICE, ignoreCase = true)
             return RouterStatus(
                 authed = authed,
                 note = note,
-                networkType = data["network_type"].orEmpty(),
-                reading = SignalReading.resolve(rsrp, rssi),
+                networkType = networkType,
+                // With no service there is nothing for a signal reading to
+                // describe, whatever RSSI the device is still echoing. Showing
+                // "Weak" there would claim a poor connection where there is
+                // none. The raw figures stay visible under Details.
+                reading = if (hasService) SignalReading.resolve(rsrp, rssi) else null,
                 rsrpDbm = rsrp,
                 rssiDbm = rssi,
                 deviceBars = data["signalbar"].orEmpty(),

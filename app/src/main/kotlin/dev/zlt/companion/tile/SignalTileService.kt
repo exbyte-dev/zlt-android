@@ -41,7 +41,7 @@ class SignalTileService : TileService() {
     private var refreshJob: Job? = null
 
     private val settingsStore by lazy { SettingsStore(applicationContext) }
-    private val repository by lazy { RouterRepository(settingsStore) }
+    private val repository by lazy { RouterRepository.from(settingsStore) }
     private val cache by lazy { StatusCache(applicationContext) }
 
     override fun onStartListening() {
@@ -54,9 +54,9 @@ class SignalTileService : TileService() {
             }
             // Cached first, so the tile is never blank while the router answers.
             render(cache.current())
-            runCatching { repository.status() }
-                .onSuccess { status ->
-                    cache.store(status.reading)
+            runCatching { repository.snapshot() }
+                .onSuccess { snapshot ->
+                    cache.store(snapshot.status.reading)
                     render(cache.current())
                 }
         }

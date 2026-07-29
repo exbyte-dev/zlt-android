@@ -110,10 +110,18 @@ and nowhere else.
   The fallback order exists for other builds.
 - **3G is `TD_W`, not `Only_WCDMA`.**
 - **LOGIN answers `"0"` or `"4"`; every other write answers `"success"`.**
+- **The status keys and the mode keys go out as one `proc_get`.** They are all
+  plain scalar keys and `multi_data` joins as many as are asked for, so there is
+  no reason to make two round trips — and making two meant the mode went stale.
+  If firmware ever refuses a list that long, `snapshot()` notices the mode keys
+  missing from the response and re-reads them separately.
+- **With `network_type: No Service` the device still echoes a stale `rssi` and
+  `signalbar`.** Those are ignored for the headline reading and shown only under
+  Details.
 
 ## Testing
 
-54 unit tests, all on the JVM — no device or emulator needed.
+63 unit tests, all on the JVM — no device or emulator needed.
 
 ```sh
 ./gradlew testDebugUnitTest
@@ -130,8 +138,9 @@ rename breaks a test rather than moving both sides at once.
   would need a foreground service. The tile paints its last cached reading
   immediately and refreshes in the background, so it is current within about a
   second of opening the shade.
-- **`ppp_status` is only interpreted for one value.** `ppp_connected` reads as
-  Connected; anything else is shown verbatim as what the router said, because
-  there is no capture of the other states to work from.
+- **`ppp_status` is interpreted for three captured values.** `ppp_connected`,
+  `ppp_connecting` and `ppp_disconnected` are named;
+  anything else is shown verbatim, because there is no capture of the other
+  states to work from.
 - **IPv4 addresses only**, no hostnames and no port. The router is reached by
   address on the LAN.

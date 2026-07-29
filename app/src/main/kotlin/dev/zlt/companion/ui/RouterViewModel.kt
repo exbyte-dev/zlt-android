@@ -45,7 +45,7 @@ data class StatusUiState(
 class RouterViewModel(application: Application) : AndroidViewModel(application) {
 
     private val settingsStore = SettingsStore(application)
-    private val repository = RouterRepository(settingsStore)
+    private val repository = RouterRepository.from(settingsStore)
     private val statusCache = StatusCache(application)
 
     val settings: StateFlow<RouterSettings?> = settingsStore.settings
@@ -58,34 +58,32 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
     private var inFlight: Job? = null
 
     /**
-     * One poll.
+     * One poll: signal and configured mode together, in a single read.
+     *
+     * The mode is refreshed on every poll, not just on first load. It has to be:
+     * a mode changed from the router's own web UI otherwise never shows up here,
+     * and a stale mode on screen next to a live signal reading looks exactly
+     * like the app misreporting the signal.
      *
      * Overlapping calls are dropped rather than queued — the same guard the web
      * dashboard uses. The device is slow enough that a backlog of polls would
      * simply pile up behind the client's mutex.
      */
-    fun refresh(includeMode: Boolean = false) {
+    fun refresh() {
         if (inFlight?.isActive == true) return
         inFlight = viewModelScope.launch {
             _state.update { it.copy(refreshing = true) }
             try {
-                val status = repository.status()
-                // The mode is read on demand rather than every poll: it costs a
-                // second authenticated round trip, it only changes when someone
-                // changes it, and the device is slow enough that the two calls
-                // would contend.
-                val mode = if (includeMode || _state.value.mode == null) {
-                    runCatching { repository.mode() }.getOrNull()
-                } else {
-                    null
-                }
+                val snapshot = repository.snapshot()
                 consecutiveFailures = 0
                 // Kept for the Quick Settings tile, which cannot poll on its own.
-                statusCache.store(status.reading)
+                statusCache.store(snapshot.status.reading)
                 _state.update {
                     it.copy(
-                        status = status,
-                        mode = mode ?: it.mode,
+                        status = snapshot.status,
+                        // Keep the last known mode when this poll could not read
+                        // one (no session), rather than blanking the card.
+                        mode = snapshot.mode ?: it.mode,
                         error = null,
                         lastUpdatedEpochMs = System.currentTimeMillis(),
                         everLoaded = true,
@@ -133,7 +131,7 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
             // Credentials changed, so nothing on screen is trustworthy any more.
             consecutiveFailures = 0
             _state.value = StatusUiState()
-            refresh(includeMode = true)
+            refresh()
         }
     }
 

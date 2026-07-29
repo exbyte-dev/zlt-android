@@ -31,6 +31,7 @@ class RouterMock : AutoCloseable {
 
     private var loginSetsCookie: String? = null
     private var rawGetBody: String? = null
+    private var answerAtMostKeys: Int? = null
 
     init {
         server.dispatcher = object : Dispatcher() {
@@ -57,6 +58,15 @@ class RouterMock : AutoCloseable {
     /** Answer every proc_get with this exact body, valid JSON or not. */
     fun answerRawGet(body: String) {
         rawGetBody = body
+    }
+
+    /**
+     * Simulate firmware that will not serve an unlimited cmd list: only the
+     * first [count] keys of any multi read come back, the rest are dropped
+     * from the response entirely.
+     */
+    fun answerAtMostKeys(count: Int) {
+        answerAtMostKeys = count
     }
 
     /** Queue one POST response body. Call repeatedly for a sequence. */
@@ -95,7 +105,12 @@ class RouterMock : AutoCloseable {
             } else {
                 jsonOf(mapOf("get_token" to values.getOrDefault("get_token", "")))
             }
-            else -> jsonOf(cmd.split(",").associateWith { values.getOrDefault(it, "") })
+            else -> {
+                val keys = cmd.split(",").let { all ->
+                    answerAtMostKeys?.let { all.take(it) } ?: all
+                }
+                jsonOf(keys.associateWith { values.getOrDefault(it, "") })
+            }
         }
         return MockResponse().setResponseCode(200).setBody(body)
     }
