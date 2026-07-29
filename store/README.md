@@ -34,3 +34,14 @@ the edges on some surfaces.
 Taken from the app running in demo mode, so they show the real UI without
 needing the router. The demo banner is visible in them deliberately — the
 listing must not imply sample readings are live ones.
+
+## Why the screenshots are 1200×2400
+
+Captured at the emulator's native 1080×2400, which is 20:9 — outside Play's
+stated phone bounds (longest side no more than twice the shortest). They are
+padded to an exact 2:1 on the app's own background rather than cropped, so no
+content is lost and the padding is invisible.
+
+```sh
+magick shot.png -background "#F7F7FC" -gravity center -extent 1200x2400 shot.png
+```
