@@ -1,5 +1,6 @@
 package dev.zlt.companion.data
 
+import dev.zlt.companion.net.DemoTransport
 import dev.zlt.companion.net.LockedOut
 import dev.zlt.companion.net.LoginFailed
 import dev.zlt.companion.net.NetworkMode
@@ -135,7 +136,24 @@ class RouterRepository(
     }
 
     companion object {
-        fun from(settingsStore: SettingsStore): RouterRepository =
-            RouterRepository({ settingsStore.current().credentials() })
+        /**
+         * In demo mode every request is answered in-process by [DemoTransport],
+         * so no traffic leaves the app and no router is needed. The seam is the
+         * client's `baseClient`, which means everything above it — session,
+         * parsing, this repository — behaves identically either way.
+         */
+        fun from(settingsStore: SettingsStore): RouterRepository = RouterRepository(
+            credentialsProvider = {
+                val settings = settingsStore.current()
+                if (settings.demoMode) DemoTransport.CREDENTIALS else settings.credentials()
+            },
+            clientFactory = { credentials ->
+                if (credentials == DemoTransport.CREDENTIALS) {
+                    ZltClient(credentials, baseClient = DemoTransport.okHttpClient())
+                } else {
+                    ZltClient(credentials)
+                }
+            },
+        )
     }
 }

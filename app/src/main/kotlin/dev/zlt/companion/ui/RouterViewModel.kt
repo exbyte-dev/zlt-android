@@ -76,8 +76,12 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 val snapshot = repository.snapshot()
                 consecutiveFailures = 0
-                // Kept for the Quick Settings tile, which cannot poll on its own.
-                statusCache.store(snapshot.status.reading)
+                // Kept for the Quick Settings tile, which cannot poll on its
+                // own. Never written in demo mode: the tile sits outside the
+                // app and must not report signal from a router that is not there.
+                if (settings.value?.demoMode != true) {
+                    statusCache.store(snapshot.status.reading)
+                }
                 _state.update {
                     it.copy(
                         status = snapshot.status,
@@ -137,5 +141,15 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setPollSeconds(seconds: Int) {
         viewModelScope.launch { settingsStore.setPollSeconds(seconds) }
+    }
+
+    fun setDemoMode(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsStore.setDemoMode(enabled)
+            // The data source changed, so nothing on screen still applies.
+            consecutiveFailures = 0
+            _state.value = StatusUiState()
+            refresh()
+        }
     }
 }
