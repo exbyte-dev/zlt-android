@@ -96,6 +96,9 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.android)
+    // Used only as a parser (Json.parseToJsonElement) for the device's flat
+    // JSON responses, so the serialization compiler plugin is not needed.
+    implementation(libs.kotlinx.serialization.json)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 
