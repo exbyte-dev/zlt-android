@@ -1,3 +1,32 @@
 <resources>
     <string name="app_name">ZLT Companion</string>
+
+    <!-- The hardware is referred to by model only, never by network operator. -->
+    <string name="device_name">ZLT T10D MAX</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Connect to your router</string>
+    <string name="setup_intro">Enter the address and password for your %1$s. Both stay on this phone.</string>
+    <string name="setup_host_label">Router address</string>
+    <string name="setup_host_hint">Usually 192.168.0.1. It is printed on a sticker on the router.</string>
+    <string name="setup_password_label">Router password</string>
+    <string name="setup_password_hint">The same password you use for the router\'s own web page.</string>
+    <string name="setup_advanced">Advanced</string>
+    <string name="setup_username_label">Username</string>
+    <string name="setup_username_hint">Leave this as admin unless your router uses a different account.</string>
+    <string name="setup_password_required">Enter the router password</string>
+    <string name="setup_save">Save and connect</string>
+    <string name="setup_show_password">Show password</string>
+    <string name="setup_hide_password">Hide password</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_open">Settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_refresh_rate">Check every</string>
+    <string name="settings_seconds">%1$d seconds</string>
+    <string name="settings_privacy_note">This app only talks to your router. It sends nothing anywhere else.</string>
+
+    <!-- Lockout warning, shown wherever a password is entered -->
+    <string name="lockout_warning">The router locks you out for a few minutes after five wrong passwords, so double-check it before saving.</string>
 </resources>
