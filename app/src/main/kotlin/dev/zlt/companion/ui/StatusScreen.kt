@@ -218,6 +218,8 @@ private fun ConnectionCard(connection: ConnectionState) {
         Text(
             text = when (connection) {
                 ConnectionState.Connected -> stringResource(R.string.status_connected)
+                ConnectionState.Connecting -> stringResource(R.string.status_connecting)
+                ConnectionState.Disconnected -> stringResource(R.string.status_disconnected)
                 ConnectionState.Unknown -> stringResource(R.string.status_connection_unknown)
                 is ConnectionState.Reported ->
                     stringResource(R.string.status_connection_reported, connection.raw)

@@ -39,6 +39,8 @@
     <string name="status_dbm">%1$s %2$d dBm</string>
     <string name="status_internet">Internet</string>
     <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_disconnected">Not connected</string>
     <string name="status_connection_unknown">Not reported</string>
     <string name="status_connection_reported">Router reports \"%1$s\"</string>
     <string name="status_network_mode">Network mode</string>

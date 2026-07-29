@@ -122,13 +122,22 @@ class RouterStatusTest {
     }
 
     @Test
-    fun `only ppp_connected counts as connected`() {
+    fun `the three captured ppp states are named`() {
+        // All three observed on the live device: connected, mid-reattach after a
+        // mode change, and with the connection dropped.
         assertEquals(ConnectionState.Connected, ConnectionState.from("ppp_connected"))
+        assertEquals(ConnectionState.Connecting, ConnectionState.from("ppp_connecting"))
+        assertEquals(ConnectionState.Disconnected, ConnectionState.from("ppp_disconnected"))
         assertEquals(ConnectionState.Unknown, ConnectionState.from(""))
-        // Not guessed at: whatever else the device says is carried through as-is.
+    }
+
+    @Test
+    fun `an uncaptured ppp state is carried through rather than guessed at`() {
+        // ppp_disconnecting probably exists, but there is no capture of it, so
+        // it must surface as itself rather than be mapped on a hunch.
         assertEquals(
-            ConnectionState.Reported("ppp_disconnected"),
-            ConnectionState.from("ppp_disconnected"),
+            ConnectionState.Reported("ppp_disconnecting"),
+            ConnectionState.from("ppp_disconnecting"),
         )
     }
 

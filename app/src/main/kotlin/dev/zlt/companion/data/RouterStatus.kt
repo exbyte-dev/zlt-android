@@ -6,14 +6,18 @@ import kotlin.math.roundToInt
 /**
  * How the router describes its data connection.
  *
- * Only `ppp_connected` is treated as connected, because that is the only value
- * observed on the real device — it is the one that appears in the Python
- * project's fixtures. Other firmware states certainly exist, but guessing what
- * they are called and what they mean would be inventing protocol, so anything
- * else is surfaced verbatim rather than interpreted.
+ * Three `ppp_status` values are captured from the live device: `ppp_connected`,
+ * `ppp_connecting` (seen while re-attaching after a network mode change) and
+ * `ppp_disconnected`. Those three are named.
+ *
+ * Anything else is still surfaced verbatim rather than mapped. `ppp_disconnecting`
+ * very likely exists by symmetry, but "likely" is not a capture, and inventing
+ * protocol is exactly what the fallback is here to avoid.
  */
 sealed interface ConnectionState {
     data object Connected : ConnectionState
+    data object Connecting : ConnectionState
+    data object Disconnected : ConnectionState
     data object Unknown : ConnectionState
 
     /** The router said something we have not seen before. Shown as-is. */
@@ -21,9 +25,13 @@ sealed interface ConnectionState {
 
     companion object {
         const val PPP_CONNECTED = "ppp_connected"
+        const val PPP_CONNECTING = "ppp_connecting"
+        const val PPP_DISCONNECTED = "ppp_disconnected"
 
         fun from(raw: String): ConnectionState = when {
             raw == PPP_CONNECTED -> Connected
+            raw == PPP_CONNECTING -> Connecting
+            raw == PPP_DISCONNECTED -> Disconnected
             raw.isBlank() -> Unknown
             else -> Reported(raw)
         }
