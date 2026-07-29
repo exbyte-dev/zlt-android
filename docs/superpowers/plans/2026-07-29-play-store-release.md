@@ -186,8 +186,9 @@ class DemoTransportTest {
         assertEquals("LTE", snapshot.status.networkType)
         assertTrue(snapshot.status.hasService)
 
-        val reading = assertNotNull(snapshot.status.reading).let { snapshot.status.reading!! }
-        assertEquals(SignalMetricExpectation.METRIC, reading.metric.label)
+        val reading = snapshot.status.reading
+        assertNotNull("a demo reading should resolve", reading)
+        assertEquals("RSRP", reading!!.metric.label)
         assertEquals(-78, reading.dbm)
         assertEquals(SignalLevel.EXCELLENT, reading.level)
     }
@@ -213,10 +214,6 @@ class DemoTransportTest {
         repository().setMode(NetworkMode.GSM_ONLY)
         // A fresh transport must not inherit the previous one's mutation.
         assertEquals(NetworkMode.LTE_ONLY, repository().snapshot().mode?.configured)
-    }
-
-    private object SignalMetricExpectation {
-        const val METRIC = "RSRP"
     }
 }
 ```
@@ -267,7 +264,10 @@ class DemoTransport : Interceptor {
         "signalbar" to "4",
         "lte_rsrq" to "-9",
         "lte_pci" to "204",
-        "ppp_status" to ConnectionStateKeys.PPP_CONNECTED,
+        // Spelled out rather than imported from ConnectionState, following the
+        // convention RouterMock states: these are wire values, and a renamed
+        // constant should break a test rather than move both sides at once.
+        "ppp_status" to "ppp_connected",
         "lte_rsrp" to "-78",
         "lte_band" to "3",
         "lte_snr" to "14",
@@ -361,10 +361,6 @@ class DemoTransport : Interceptor {
 
     private fun escape(value: String): String =
         value.replace("\\", "\\\\").replace("\"", "\\\"")
-
-    private object ConnectionStateKeys {
-        const val PPP_CONNECTED = "ppp_connected"
-    }
 
     companion object {
         private val JSON = "application/json".toMediaType()
