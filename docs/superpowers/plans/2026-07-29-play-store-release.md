@@ -35,19 +35,13 @@
 
 - [ ] **Step 1: Change the applicationId**
 
-In `app/build.gradle.kts`, inside `defaultConfig`:
+In `app/build.gradle.kts`, change the single `applicationId` line inside `defaultConfig`:
 
 ```kotlin
-    defaultConfig {
         applicationId = "dev.exbyte.zltcompanion"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-    }
 ```
 
-Leave `namespace = "dev.zlt.companion"` on line 21 untouched. `targetSdk` is bumped in Task 2, not here.
+Change nothing else in that block. `compileSdk` and `targetSdk` are raised to 36 in Task 2, and `namespace = "dev.zlt.companion"` on line 21 stays as it is — it is compile-time only and never leaves the binary.
 
 - [ ] **Step 2: Change the app name**
 
@@ -1000,13 +994,15 @@ Tap **Try it without a router** on the setup screen.
 
 Four shots: the status screen, Details expanded, the mode switcher mid-change, and the setup screen.
 
+**This step is human-in-the-loop and must not be automated by a subagent.** The controller boots the emulator and hands it to the developer, who navigates to each screen. The controller runs one capture per screen, on request:
+
 ```bash
 mkdir -p store/screenshots
-for name in status details mode setup; do
-  echo "Navigate to: $name, then press enter"; read
-  ~/Android/Sdk/platform-tools/adb exec-out screencap -p > store/screenshots/$name.png
-done
+# Run once per screen, after the developer says they are on it.
+~/Android/Sdk/platform-tools/adb exec-out screencap -p > store/screenshots/<name>.png
 ```
+
+Names: `status`, `details`, `mode`, `setup`.
 
 - [ ] **Step 5: Verify they meet Play's rules**
 

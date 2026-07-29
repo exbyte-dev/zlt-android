@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <rect width="1024" height="500" fill="#0E1B2A"/>
+  <!-- Text block, left. Kept inside the middle 924x400 that Play never crops. -->
+  <text x="80" y="256" font-family="DejaVu Sans" font-size="76" font-weight="bold" fill="#F2F7FB">Router Signal</text>
+  <text x="80" y="320" font-family="DejaVu Sans" font-size="31" fill="#A9D0E8">Signal, connection and network mode</text>
+  <text x="80" y="364" font-family="DejaVu Sans" font-size="31" fill="#A9D0E8">for the ZLT T10D MAX</text>
+  <!-- Bars, right. Same geometry and palette as the launcher icon. -->
+  <g transform="translate(700 146) scale(3.1) translate(-22 -31)">
+    <path fill="#5B7A99" d="M24,58 h12 a2,2 0 0 1 2,2 v10 a2,2 0 0 1 -2,2 h-12 a2,2 0 0 1 -2,-2 v-10 a2,2 0 0 1 2,-2 z"/>
+    <path fill="#7FA8CC" d="M41,49 h12 a2,2 0 0 1 2,2 v19 a2,2 0 0 1 -2,2 h-12 a2,2 0 0 1 -2,-2 v-19 a2,2 0 0 1 2,-2 z"/>
+    <path fill="#A9D0E8" d="M58,40 h12 a2,2 0 0 1 2,2 v28 a2,2 0 0 1 -2,2 h-12 a2,2 0 0 1 -2,-2 v-28 a2,2 0 0 1 2,-2 z"/>
+    <path fill="#4ADE9B" d="M75,31 h12 a2,2 0 0 1 2,2 v37 a2,2 0 0 1 -2,2 h-12 a2,2 0 0 1 -2,-2 v-37 a2,2 0 0 1 2,-2 z"/>
+  </g>
+</svg>

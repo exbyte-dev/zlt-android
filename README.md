@@ -1,8 +1,13 @@
-# ZLT Companion
+# Router Signal
 
 An Android companion app for the **ZLT T10D MAX** 4G router. Shows signal
 strength, connection state and the current network mode, and lets you switch
 between network modes. Includes a Quick Settings tile for signal at a glance.
+
+> **Disclaimer:** This is an independent, reverse-engineered client. It is **not
+> affiliated with, endorsed by, or supported by ZTE, MTN, or any carrier**. The
+> API it talks to is undocumented and can break on a firmware update with no
+> notice.
 
 It is a port of the login and `reqproc` protocol handling from the
 [`zltrouter`](https://github.com/exbyte-dev/zltrouter) Python project, which is
@@ -16,6 +21,7 @@ where the protocol was reverse-engineered and live-verified. That project's
 - Switch network mode between Automatic, 4G only, 4G and 3G, 3G only, 2G only
 - A Quick Settings tile showing signal strength; tapping it opens the app
 - Router address and password entered in the app and kept on the device
+- A demo mode, so the app can be seen working without a router at all
 
 That is the whole of v1. No SMS, no USSD, no speed test — the Python project
 does all of those.
@@ -26,6 +32,13 @@ The app talks to your router and to nothing else. There is no analytics, no
 crash reporting and no telemetry, and the dependency list is AndroidX, Kotlin,
 OkHttp and kotlinx-serialization — nothing that reports usage anywhere.
 `INTERNET` is the only permission it declares.
+
+Demo mode makes no network connections at all. `DemoTransport` is an OkHttp
+interceptor that answers the `reqproc` calls in-process, plugged into the
+`baseClient` parameter `ZltClient` already takes — so the login handshake, the
+parsing, the repository and the whole UI run exactly as they do against real
+hardware, which is the point. It exists so the app can be evaluated, and
+reviewed for the Play Store, without a ZLT T10D MAX on the desk.
 
 The router speaks plain HTTP on the LAN, so cleartext has to be allowed. It is
 allowed narrowly, in two layers:
@@ -49,15 +62,18 @@ device. Backups are excluded for the same reason.
 
 ## Building
 
-Needs JDK 17+ and an Android SDK with platform 35.
+Needs JDK 17+ and an Android SDK with platform 36.
 
 ```sh
 ./gradlew assembleDebug        # debug APK
 ./gradlew testDebugUnitTest    # unit tests
 ./gradlew assembleRelease      # release APK
+./gradlew bundleRelease        # release AAB, which is what Play takes
 ```
 
-`local.properties` needs `sdk.dir` pointing at your SDK, as usual.
+`local.properties` needs `sdk.dir` pointing at your SDK, as usual. The SDK needs
+`platforms;android-36` and `build-tools;36.0.0`; the emulator and a system image
+are only needed for capturing store screenshots.
 
 ### Release signing
 
@@ -82,7 +98,7 @@ able to update the app on Play again.
 ```
 net/    The protocol port. ZltAuth (login encoding), ZltClient (proc_get,
         proc_post, session, lockout guard), ZltProtocol (every device-specific
-        constant), HostValidation.
+        constant), HostValidation, DemoTransport (the canned router).
 data/   SettingsStore and the Keystore cipher, RouterRepository, the signal
         quality thresholds, StatusCache for the tile.
 ui/     Compose screens and the ViewModel.
@@ -121,7 +137,7 @@ and nowhere else.
 
 ## Testing
 
-63 unit tests, all on the JVM — no device or emulator needed.
+71 unit tests, all on the JVM — no device or emulator needed.
 
 ```sh
 ./gradlew testDebugUnitTest

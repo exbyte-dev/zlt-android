@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -46,6 +47,8 @@ fun SettingsScreen(
     onSave: (host: String, username: String, password: String) -> Unit,
     onPollSecondsChange: (Int) -> Unit,
     onBack: (() -> Unit)?,
+    /** Null once the app is set up for real — only offered during first setup. */
+    onTryDemo: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var host by remember(settings.host) { mutableStateOf(settings.host) }
@@ -191,6 +194,20 @@ fun SettingsScreen(
             if (onBack != null) {
                 TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.settings_back))
+                }
+            }
+
+            // Offered only during first setup, so the app can be evaluated —
+            // and reviewed for the Play Store — without the hardware.
+            if (onTryDemo != null) {
+                HorizontalDivider()
+                Text(
+                    text = stringResource(R.string.demo_explain),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(onClick = onTryDemo, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.demo_try))
                 }
             }
 

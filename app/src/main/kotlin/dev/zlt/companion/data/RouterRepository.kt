@@ -1,5 +1,6 @@
 package dev.zlt.companion.data
 
+import dev.zlt.companion.net.DemoTransport
 import dev.zlt.companion.net.LockedOut
 import dev.zlt.companion.net.LoginFailed
 import dev.zlt.companion.net.NetworkMode
@@ -36,17 +37,19 @@ class RouterRepository(
     private var cachedClient: ZltClient? = null
     private var cachedCredentials: RouterCredentials? = null
 
-    private suspend fun client(): ZltClient {
+    // The credentials read happens inside the lock so that it and the factory
+    // call are atomic with respect to each other. [from] relies on that: it
+    // passes demo-ness from one to the other, and an interleaved caller would
+    // otherwise be able to pair one poll's flag with another poll's credentials.
+    private suspend fun client(): ZltClient = mutex.withLock {
         val credentials = credentialsProvider()
-        return mutex.withLock {
-            val existing = cachedClient
-            if (existing != null && cachedCredentials == credentials) {
-                existing
-            } else {
-                clientFactory(credentials).also {
-                    cachedClient = it
-                    cachedCredentials = credentials
-                }
+        val existing = cachedClient
+        if (existing != null && cachedCredentials == credentials) {
+            existing
+        } else {
+            clientFactory(credentials).also {
+                cachedClient = it
+                cachedCredentials = credentials
             }
         }
     }
@@ -135,7 +138,35 @@ class RouterRepository(
     }
 
     companion object {
-        fun from(settingsStore: SettingsStore): RouterRepository =
-            RouterRepository({ settingsStore.current().credentials() })
+        /**
+         * In demo mode every request is answered in-process by [DemoTransport],
+         * so no traffic leaves the app and no router is needed. The seam is the
+         * client's `baseClient`, which means everything above it — session,
+         * parsing, this repository — behaves identically either way.
+         */
+        fun from(settingsStore: SettingsStore): RouterRepository {
+            // Carried from the credentials read to the factory call, which
+            // client() performs atomically under its lock.
+            //
+            // Deliberately not inferred by comparing against
+            // DemoTransport.CREDENTIALS: someone whose router really is at
+            // 192.168.0.1 with the password "demo" would then be shown sample
+            // readings, with no banner to say so, as though they were real.
+            var demo = false
+            return RouterRepository(
+                credentialsProvider = {
+                    val settings = settingsStore.current()
+                    demo = settings.demoMode
+                    if (demo) DemoTransport.CREDENTIALS else settings.credentials()
+                },
+                clientFactory = { credentials ->
+                    if (demo) {
+                        ZltClient(credentials, baseClient = DemoTransport.okHttpClient())
+                    } else {
+                        ZltClient(credentials)
+                    }
+                },
+            )
+        }
     }
 }

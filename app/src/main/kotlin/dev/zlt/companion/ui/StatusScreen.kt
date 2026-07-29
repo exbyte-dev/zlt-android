@@ -41,8 +41,10 @@ import java.util.Date
 fun StatusScreen(
     state: StatusUiState,
     host: String,
+    demoMode: Boolean,
     onRefresh: () -> Unit,
     onOpenSettings: () -> Unit,
+    onExitDemo: () -> Unit,
     modeControl: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -55,6 +57,34 @@ fun StatusScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Header(host = host, onOpenSettings = onOpenSettings)
+
+            // Persistent, not dismissable: sample readings must never be
+            // mistaken for what the router is actually doing.
+            if (demoMode) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 14.dp, end = 4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.demo_banner),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(vertical = 12.dp),
+                        )
+                        TextButton(onClick = onExitDemo) {
+                            Text(stringResource(R.string.demo_exit))
+                        }
+                    }
+                }
+            }
 
             state.error?.let { message ->
                 Card(
