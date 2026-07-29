@@ -63,7 +63,7 @@ fun StatusScreen(
             if (demoMode) {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -74,7 +74,7 @@ fun StatusScreen(
                         Text(
                             text = stringResource(R.string.demo_banner),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(vertical = 12.dp),
