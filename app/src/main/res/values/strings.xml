@@ -27,6 +27,41 @@
     <string name="settings_seconds">%1$d seconds</string>
     <string name="settings_privacy_note">This app only talks to your router. It sends nothing anywhere else.</string>
 
+    <!-- Status screen -->
+    <string name="status_signal">Signal</string>
+    <string name="quality_excellent">Excellent</string>
+    <string name="quality_good">Good</string>
+    <string name="quality_fair">Fair</string>
+    <string name="quality_weak">Weak</string>
+    <string name="status_no_reading">No signal</string>
+    <string name="status_no_reading_detail">The router is not picking up a mobile network right now.</string>
+    <string name="status_bars_description">Signal %1$s, %2$d of %3$d bars</string>
+    <string name="status_dbm">%1$s %2$d dBm</string>
+    <string name="status_internet">Internet</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_connection_unknown">Not reported</string>
+    <string name="status_connection_reported">Router reports \"%1$s\"</string>
+    <string name="status_network_mode">Network mode</string>
+    <string name="status_mode_unknown">Not reported</string>
+    <string name="status_mode_unrecognised">Router reports \"%1$s\"</string>
+    <string name="status_on_now">On %1$s now</string>
+    <string name="status_details">Details</string>
+    <string name="status_details_hide">Hide details</string>
+    <string name="status_updated">Updated %1$s</string>
+    <string name="status_checking">Checking…</string>
+    <string name="status_refresh">Refresh now</string>
+    <string name="status_open_data_note">Not signed in to the router, so only the basic readings are shown.</string>
+
+    <string name="detail_network_type">Network</string>
+    <string name="detail_rsrp">RSRP</string>
+    <string name="detail_rssi">RSSI</string>
+    <string name="detail_band">Band</string>
+    <string name="detail_snr">SNR</string>
+    <string name="detail_rsrq">RSRQ</string>
+    <string name="detail_pci">Cell ID</string>
+    <string name="detail_device_bars">Router\'s own bars</string>
+    <string name="detail_empty">—</string>
+
     <!-- Lockout warning, shown wherever a password is entered -->
     <string name="lockout_warning">The router locks you out for a few minutes after five wrong passwords, so double-check it before saving.</string>
 </resources>

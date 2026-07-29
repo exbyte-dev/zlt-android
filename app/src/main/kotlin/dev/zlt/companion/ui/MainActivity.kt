@@ -4,49 +4,42 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import dev.zlt.companion.data.RouterSettings
-import dev.zlt.companion.data.SettingsStore
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.zlt.companion.ui.theme.ZltTheme
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val store = SettingsStore(applicationContext)
         setContent {
             ZltTheme {
-                AppRoot(store)
+                AppRoot()
             }
         }
     }
 }
 
 @Composable
-private fun AppRoot(store: SettingsStore) {
-    val settings by store.settings.collectAsStateWithLifecycle(initialValue = null)
-    val scope = rememberCoroutineScope()
+private fun AppRoot(viewModel: RouterViewModel = viewModel()) {
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     var settingsOpen by remember { mutableStateOf(false) }
 
     val current = settings
     if (current == null) {
-        // One frame at most, while DataStore reads from disk.
+        // At most one frame, while DataStore reads from disk.
         Surface {}
         return
-    }
-
-    // Nothing to show until there is a router to show it for.
-    LaunchedEffect(current.isConfigured) {
-        if (!current.isConfigured) settingsOpen = true
     }
 
     if (settingsOpen || !current.isConfigured) {
@@ -54,19 +47,33 @@ private fun AppRoot(store: SettingsStore) {
             settings = current,
             showPollInterval = current.isConfigured,
             onSave = { host, username, password ->
-                scope.launch {
-                    store.save(host, username, password)
-                    settingsOpen = false
-                }
+                viewModel.saveSettings(host, username, password)
+                settingsOpen = false
             },
-            onPollSecondsChange = { seconds -> scope.launch { store.setPollSeconds(seconds) } },
+            onPollSecondsChange = viewModel::setPollSeconds,
             onBack = if (current.isConfigured) ({ settingsOpen = false }) else null,
         )
-    } else {
-        // Replaced by the status screen in the next commit.
-        Surface { Text(placeholderText(current)) }
+        return
     }
-}
 
-private fun placeholderText(settings: RouterSettings): String =
-    "Configured for ${settings.host}"
+    // Polling is tied to the RESUMED state, so it stops the moment the app is
+    // backgrounded and resumes on return. Nothing polls the router in the
+    // background: this app has no service and no wakelock.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner, current.pollSeconds, current.credentials()) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                viewModel.refresh()
+                delay(current.pollSeconds * 1_000L)
+            }
+        }
+    }
+
+    StatusScreen(
+        state = state,
+        host = current.host,
+        onRefresh = { viewModel.refresh(includeMode = true) },
+        onOpenSettings = { settingsOpen = true },
+        modeControl = {},
+    )
+}
