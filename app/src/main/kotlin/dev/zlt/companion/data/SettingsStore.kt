@@ -3,6 +3,7 @@ package dev.zlt.companion.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -24,10 +25,14 @@ data class RouterSettings(
     val username: String = DEFAULT_USERNAME,
     val password: String = "",
     val pollSeconds: Int = DEFAULT_POLL_SECONDS,
+    val demoMode: Boolean = false,
 ) {
-    /** Both an address we will talk to and a password to talk with. */
+    /**
+     * Both an address we will talk to and a password to talk with — or demo
+     * mode, which needs neither because it never leaves the process.
+     */
     val isConfigured: Boolean
-        get() = HostValidation.isValid(host) && password.isNotEmpty()
+        get() = demoMode || (HostValidation.isValid(host) && password.isNotEmpty())
 
     fun credentials(): RouterCredentials =
         RouterCredentials(host = host, username = username, password = password)
@@ -56,6 +61,7 @@ class SettingsStore(context: Context) {
             // presents as "not configured" and re-prompts.
             password = SecretCipher.open(prefs[KEY_PASSWORD].orEmpty()),
             pollSeconds = prefs[KEY_POLL_SECONDS] ?: RouterSettings.DEFAULT_POLL_SECONDS,
+            demoMode = prefs[KEY_DEMO_MODE] ?: false,
         )
     }
 
@@ -75,10 +81,15 @@ class SettingsStore(context: Context) {
         store.edit { prefs -> prefs[KEY_POLL_SECONDS] = seconds }
     }
 
+    suspend fun setDemoMode(enabled: Boolean) {
+        store.edit { prefs -> prefs[KEY_DEMO_MODE] = enabled }
+    }
+
     private companion object {
         val KEY_HOST = stringPreferencesKey("host")
         val KEY_USERNAME = stringPreferencesKey("username")
         val KEY_PASSWORD = stringPreferencesKey("password_sealed")
         val KEY_POLL_SECONDS = intPreferencesKey("poll_seconds")
+        val KEY_DEMO_MODE = booleanPreferencesKey("demo_mode")
     }
 }
