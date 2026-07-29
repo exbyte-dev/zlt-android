@@ -91,7 +91,34 @@ cp keystore.properties.example keystore.properties
 ```
 
 **Back the keystore up somewhere off this machine.** Losing it means never being
-able to update the app on Play again.
+able to ship an update that existing installs will accept.
+
+### Verifying a downloaded APK
+
+Releases are signed with the key below. Android refuses to install an update
+signed by a different key, so this fingerprint is also what proves a download
+came from here:
+
+```
+SHA-256  9a:ff:2a:6f:b0:f9:6a:a1:7b:30:a3:1e:a6:21:80:a9:fd:6b:32:e7:60:ec:c0:ef:44:55:17:57:0e:8b:cd:a8
+```
+
+Check a download against it before installing:
+
+```sh
+apksigner verify --print-certs app-release.apk
+```
+
+### If this ever goes to Google Play
+
+Play App Signing normally has Google generate its own app signing key. Do **not**
+accept that here. Anyone who sideloaded a release from GitHub would then be
+unable to update to the Play build — the signatures would not match, and Android
+would make them uninstall first and lose their settings.
+
+Enrol by uploading `zlt-companion-release.jks` as the app signing key instead, so
+both channels ship the same signature. That choice is made once, at enrolment,
+and cannot be changed afterwards.
 
 ## How it is put together
 
