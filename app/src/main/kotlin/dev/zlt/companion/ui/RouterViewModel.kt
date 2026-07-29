@@ -74,12 +74,17 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
         inFlight = viewModelScope.launch {
             _state.update { it.copy(refreshing = true) }
             try {
+                // Read from the store rather than the settings StateFlow: that
+                // flow lags the DataStore write, so just after setDemoMode(true)
+                // it can still say false while the repository is already
+                // serving demo data — which would cache a fictional reading.
+                val demoMode = settingsStore.current().demoMode
                 val snapshot = repository.snapshot()
                 consecutiveFailures = 0
                 // Kept for the Quick Settings tile, which cannot poll on its
                 // own. Never written in demo mode: the tile sits outside the
                 // app and must not report signal from a router that is not there.
-                if (settings.value?.demoMode != true) {
+                if (!demoMode) {
                     statusCache.store(snapshot.status.reading)
                 }
                 _state.update {

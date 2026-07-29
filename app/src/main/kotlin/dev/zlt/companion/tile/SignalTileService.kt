@@ -48,7 +48,13 @@ class SignalTileService : TileService() {
         super.onStartListening()
         refreshJob?.cancel()
         refreshJob = scope.launch {
-            if (!settingsStore.current().isConfigured) {
+            val settings = settingsStore.current()
+            // Demo mode is deliberately excluded, not just unconfigured setups.
+            // The tile lives outside the app, where there is no banner to say
+            // the reading is a sample, so showing one would be a plain lie
+            // about the network. It also must never poll in demo mode: that
+            // would write sample readings into the cache the tile reads.
+            if (!settings.isConfigured || settings.demoMode) {
                 renderUnconfigured()
                 return@launch
             }
