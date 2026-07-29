@@ -22,7 +22,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "dev.zlt.companion"
+        applicationId = "dev.exbyte.zltcompanion"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

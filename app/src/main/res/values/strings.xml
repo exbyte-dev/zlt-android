@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ZLT Companion</string>
+    <string name="app_name">Router Signal</string>
 
     <!-- The hardware is referred to by model only, never by network operator. -->
     <string name="device_name">ZLT T10D MAX</string>
