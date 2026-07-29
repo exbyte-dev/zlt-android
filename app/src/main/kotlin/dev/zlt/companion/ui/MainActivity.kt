@@ -52,6 +52,9 @@ private fun AppRoot(viewModel: RouterViewModel = viewModel()) {
             },
             onPollSecondsChange = viewModel::setPollSeconds,
             onBack = if (current.isConfigured) ({ settingsOpen = false }) else null,
+            // Only during first setup: once there is a real router configured,
+            // offering a fake one is just confusing.
+            onTryDemo = if (!current.isConfigured) ({ viewModel.setDemoMode(true) }) else null,
         )
         return
     }
@@ -72,8 +75,10 @@ private fun AppRoot(viewModel: RouterViewModel = viewModel()) {
     StatusScreen(
         state = state,
         host = current.host,
+        demoMode = current.demoMode,
         onRefresh = { viewModel.refresh() },
         onOpenSettings = { settingsOpen = true },
+        onExitDemo = { viewModel.setDemoMode(false) },
         modeControl = {
             ModeControl(
                 mode = state.mode,

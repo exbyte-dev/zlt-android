@@ -72,6 +72,12 @@
     <!-- Mode switching -->
     <string name="mode_change_note">Switching takes a few seconds and briefly drops the internet while the router reconnects. Your Wi-Fi stays on.</string>
 
+    <!-- Demo mode: lets the app be evaluated, and reviewed, without a router -->
+    <string name="demo_try">Try it without a router</string>
+    <string name="demo_explain">See how the app looks using sample readings. Nothing is sent anywhere.</string>
+    <string name="demo_banner">Demo mode — these are sample readings, not your router.</string>
+    <string name="demo_exit">Leave demo</string>
+
     <!-- Lockout warning, shown wherever a password is entered -->
     <string name="lockout_warning">The router locks you out for a few minutes after five wrong passwords, so double-check it before saving.</string>
 </resources>
