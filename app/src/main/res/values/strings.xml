@@ -62,6 +62,11 @@
     <string name="detail_device_bars">Router\'s own bars</string>
     <string name="detail_empty">—</string>
 
+    <!-- Quick Settings tile -->
+    <string name="tile_label">Router signal</string>
+    <string name="tile_not_set_up">Tap to set up</string>
+    <string name="tile_no_signal">No signal</string>
+
     <!-- Mode switching -->
     <string name="mode_change_note">Switching takes a few seconds and briefly drops the internet while the router reconnects. Your Wi-Fi stays on.</string>
 

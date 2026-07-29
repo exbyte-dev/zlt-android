@@ -8,6 +8,7 @@ import dev.zlt.companion.data.RouterRepository
 import dev.zlt.companion.data.RouterSettings
 import dev.zlt.companion.data.RouterStatus
 import dev.zlt.companion.data.SettingsStore
+import dev.zlt.companion.data.StatusCache
 import dev.zlt.companion.net.NetworkMode
 import dev.zlt.companion.net.ZltException
 import kotlinx.coroutines.Job
@@ -45,6 +46,7 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
 
     private val settingsStore = SettingsStore(application)
     private val repository = RouterRepository(settingsStore)
+    private val statusCache = StatusCache(application)
 
     val settings: StateFlow<RouterSettings?> = settingsStore.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -78,6 +80,8 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
                     null
                 }
                 consecutiveFailures = 0
+                // Kept for the Quick Settings tile, which cannot poll on its own.
+                statusCache.store(status.reading)
                 _state.update {
                     it.copy(
                         status = status,

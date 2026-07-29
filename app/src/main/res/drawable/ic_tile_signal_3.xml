@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quick Settings tile icon: 3 of 4 bars filled.
+     Generated to keep the five variants geometrically identical.
+     Unfilled bars use fillAlpha so the system tint still applies. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/colorControlNormal">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="1.0"
+        android:pathData="M2.0,17.0 a1.0,1.0 0 0 1 1.0,-1.0 h2.0 a1.0,1.0 0 0 1 1.0,1.0 v4.0 h-4.0 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="1.0"
+        android:pathData="M7.5,13.5 a1.0,1.0 0 0 1 1.0,-1.0 h2.0 a1.0,1.0 0 0 1 1.0,1.0 v7.5 h-4.0 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="1.0"
+        android:pathData="M13.0,10.0 a1.0,1.0 0 0 1 1.0,-1.0 h2.0 a1.0,1.0 0 0 1 1.0,1.0 v11.0 h-4.0 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillAlpha="0.3"
+        android:pathData="M18.5,6.5 a1.0,1.0 0 0 1 1.0,-1.0 h2.0 a1.0,1.0 0 0 1 1.0,1.0 v14.5 h-4.0 z" />
+</vector>
