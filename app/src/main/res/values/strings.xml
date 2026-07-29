@@ -62,6 +62,9 @@
     <string name="detail_device_bars">Router\'s own bars</string>
     <string name="detail_empty">—</string>
 
+    <!-- Mode switching -->
+    <string name="mode_change_note">Switching takes a few seconds and briefly drops the internet while the router reconnects. Your Wi-Fi stays on.</string>
+
     <!-- Lockout warning, shown wherever a password is entered -->
     <string name="lockout_warning">The router locks you out for a few minutes after five wrong passwords, so double-check it before saving.</string>
 </resources>

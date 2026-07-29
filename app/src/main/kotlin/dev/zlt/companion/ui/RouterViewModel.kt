@@ -8,6 +8,7 @@ import dev.zlt.companion.data.RouterRepository
 import dev.zlt.companion.data.RouterSettings
 import dev.zlt.companion.data.RouterStatus
 import dev.zlt.companion.data.SettingsStore
+import dev.zlt.companion.net.NetworkMode
 import dev.zlt.companion.net.ZltException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,8 @@ data class StatusUiState(
     val lastUpdatedEpochMs: Long? = null,
     val everLoaded: Boolean = false,
     val refreshing: Boolean = false,
+    /** The mode being applied right now, if any. */
+    val changingMode: NetworkMode? = null,
 ) {
     companion object {
         /**
@@ -97,6 +100,25 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
                         },
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Changes the network mode, then shows whatever the router reports
+     * afterwards rather than assuming the request took.
+     */
+    fun setMode(mode: NetworkMode) {
+        if (_state.value.changingMode != null) return
+        _state.update { it.copy(changingMode = mode, error = null) }
+        viewModelScope.launch {
+            try {
+                val applied = repository.setMode(mode)
+                _state.update { it.copy(mode = applied, changingMode = null) }
+            } catch (e: ZltException) {
+                // Unlike a failed poll this is shown immediately: the user just
+                // pressed something and is owed an answer about it.
+                _state.update { it.copy(changingMode = null, error = e.message) }
             }
         }
     }

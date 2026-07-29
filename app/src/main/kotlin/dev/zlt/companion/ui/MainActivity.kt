@@ -74,6 +74,12 @@ private fun AppRoot(viewModel: RouterViewModel = viewModel()) {
         host = current.host,
         onRefresh = { viewModel.refresh(includeMode = true) },
         onOpenSettings = { settingsOpen = true },
-        modeControl = {},
+        modeControl = {
+            ModeControl(
+                mode = state.mode,
+                changingMode = state.changingMode,
+                onSelect = viewModel::setMode,
+            )
+        },
     )
 }
