@@ -120,8 +120,7 @@ private fun AppRoot(
     // Polling is tied to the RESUMED state, so it stops the moment the app is
     // backgrounded and resumes on return. Nothing polls the router in the
     // background: this app has no service and no wakelock. It runs on every
-    // tab, as the dashboard's does, so the reading in the top bar stays live
-    // and the walk test stays continuous.
+    // tab, as the dashboard's does, so the reading in the top bar stays live.
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(lifecycleOwner, current.pollSeconds, current.credentials(), current.demoMode) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {

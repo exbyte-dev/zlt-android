@@ -7,8 +7,6 @@ import dev.zlt.companion.data.AppContainer
 import dev.zlt.companion.data.NetModeState
 import dev.zlt.companion.data.RouterSettings
 import dev.zlt.companion.data.RouterStatus
-import dev.zlt.companion.data.SignalHistory
-import dev.zlt.companion.data.SignalSample
 import dev.zlt.companion.net.NetworkMode
 import dev.zlt.companion.net.ZltException
 import kotlinx.coroutines.Job
@@ -30,8 +28,6 @@ data class StatusUiState(
     val refreshing: Boolean = false,
     /** The mode being applied right now, if any. */
     val changingMode: NetworkMode? = null,
-    /** The walk-test trace, oldest first. */
-    val history: List<SignalSample> = emptyList(),
 ) {
     companion object {
         /**
@@ -90,14 +86,6 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
                 if (!demoMode) {
                     statusCache.store(snapshot.status.reading)
                 }
-                val now = System.currentTimeMillis()
-                // With no service the device echoes stale figures (see
-                // RouterStatus), so the trace records a gap rather than them.
-                val sample = if (snapshot.status.hasService) {
-                    SignalSample(now, snapshot.status.rsrpDbm, snapshot.status.rssiDbm)
-                } else {
-                    SignalSample(now, null, null)
-                }
                 _state.update {
                     it.copy(
                         status = snapshot.status,
@@ -105,10 +93,9 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
                         // one (no session), rather than blanking the card.
                         mode = snapshot.mode ?: it.mode,
                         error = null,
-                        lastUpdatedEpochMs = now,
+                        lastUpdatedEpochMs = System.currentTimeMillis(),
                         everLoaded = true,
                         refreshing = false,
-                        history = SignalHistory.append(it.history, sample),
                     )
                 }
             } catch (e: ZltException) {

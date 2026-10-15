@@ -85,13 +85,6 @@
     <string name="tab_speed">Speed</string>
     <string name="tab_messages_unread">Messages, %1$d unread</string>
 
-    <!-- Walk test -->
-    <string name="walk_title">Walk test</string>
-    <string name="walk_caption_rsrp">RSRP, with RSSI in grey · last 15 minutes</string>
-    <string name="walk_caption_rssi">RSSI · last 15 minutes</string>
-    <string name="walk_waiting">Carry the router around and the line follows the signal. It fills in as readings arrive.</string>
-    <string name="walk_description">Signal over the last 15 minutes</string>
-
     <!-- Messages -->
     <string name="sms_title">Messages</string>
     <string name="sms_unread_count">%1$d unread</string>

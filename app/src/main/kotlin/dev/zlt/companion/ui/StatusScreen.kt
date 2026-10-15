@@ -68,10 +68,6 @@ fun StatusScreen(
 
         SignalCard(reading = state.status?.reading, everLoaded = state.everLoaded)
 
-        if (state.everLoaded) {
-            WalkTestCard(history = state.history, reading = state.status?.reading)
-        }
-
         state.status?.let { status ->
             ConnectionCard(status.connection)
             ModeCard(mode = state.mode, control = modeControl)

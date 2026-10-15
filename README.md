@@ -21,9 +21,7 @@ where the protocol was reverse-engineered and live-verified. That project's
 Four tabs, mirroring the Python project's web dashboard:
 
 - **Signal:** strength as bars and a plain word, the dBm figure and the rest of
-  the readings secondary. A walk-test trace of the last 15 minutes of RSRP and
-  RSSI, so you can carry the router around and watch the line respond. Switch
-  network mode between Automatic, 4G only, 4G and 3G, 3G only, 2G only.
+  the readings secondary. Switch network mode between Automatic, 4G only, 4G and 3G, 3G only, 2G only.
 - **Messages:** the router's SMS inbox, with unread marked and counted on the
   tab. Compose (with a part count, since special characters cut a part from
   160 characters to 70), reply, and a Select mode to mark read or delete in
@@ -35,7 +33,7 @@ Four tabs, mirroring the Python project's web dashboard:
   Cloudflare's public speed test. Time-boxed both ways, as the dashboard's is.
 
 The signal readout stays in the top bar on every tab, and the poll keeps
-running whichever tab is open, so the walk test stays continuous.
+running whichever tab is open.
 
 Also:
 
@@ -44,8 +42,8 @@ Also:
 - A demo mode, so the app can be seen working without a router at all. It
   covers messages and USSD menus too.
 
-What the Python project still has that this does not: the raw `get` / `post`
-passthrough, and running itself as a service. Neither makes sense on a phone.
+What the Python project still has that this does not: the dashboard's walk-test
+graph, the raw `get` / `post` passthrough, and running itself as a service.
 
 ## Network behaviour
 
@@ -158,8 +156,8 @@ net/    The protocol port. ZltAuth (login encoding), ZltClient (proc_get,
         ZltProtocol (every device-specific constant), HostValidation,
         DemoTransport (the canned router).
 data/   SettingsStore and the Keystore cipher, RouterRepository, the signal
-        quality thresholds, StatusCache for the tile, saved USSD codes, the
-        walk-test history, AppContainer (the one shared repository).
+        quality thresholds, StatusCache for the tile, saved USSD codes,
+        AppContainer (the one shared repository).
 speed/  The speed test. Not router protocol, so kept out of net/.
 ui/     Compose screens and their ViewModels, one per tab.
 tile/   The Quick Settings tile.
@@ -193,7 +191,7 @@ and nowhere else.
   missing from the response and re-reads them separately.
 - **With `network_type: No Service` the device still echoes a stale `rssi` and
   `signalbar`.** Those are ignored for the headline reading and shown only under
-  Details, and the walk test records a gap rather than them.
+  Details.
 - **Every screen and the tile share one `RouterRepository`** (`AppContainer`),
   so one `ZltClient` and one session cookie. Separate clients would each log in
   on their own, against a device that counts logins.
@@ -211,7 +209,7 @@ and nowhere else.
 
 ## Testing
 
-166 unit tests, all on the JVM — no device or emulator needed. The SMS and
+163 unit tests, all on the JVM — no device or emulator needed. The SMS and
 USSD tests port `test_client_sms.py` and `test_client_ussd.py` case for case,
 using the same captured vectors.
 
@@ -236,9 +234,6 @@ rename breaks a test rather than moving both sides at once.
   states to work from.
 - **IPv4 addresses only**, no hostnames and no port. The router is reached by
   address on the LAN.
-- **The walk test only records while the app is open**, for the same reason
-  the tile is not live: nothing polls in the background. Leave the app on
-  screen while you walk.
 - **SMS and USSD are ported, not yet verified from the app on hardware.** The
   wire format is the Python's, which is live-verified, and the tests pin it to
   the Python's own vectors, but the first real send from a phone is still a

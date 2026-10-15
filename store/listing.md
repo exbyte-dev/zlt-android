@@ -14,8 +14,6 @@ built-in web page.
   with the dBm figure there when you want it
 • Whether the internet is actually connected
 • Switch the network mode: Automatic, 4G only, 4G and 3G, 3G only, 2G only
-• A walk test: a 15-minute signal trace, so you can carry the router around
-  and find the best spot
 • Read, send, mark read and delete the text messages on the router's SIM
 • Dial USSD codes such as balance checks, answer their menus, and save the ones
   you use as one-tap buttons
