@@ -3,12 +3,12 @@ package dev.zlt.companion.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dev.zlt.companion.data.AppContainer
 import dev.zlt.companion.data.NetModeState
-import dev.zlt.companion.data.RouterRepository
 import dev.zlt.companion.data.RouterSettings
 import dev.zlt.companion.data.RouterStatus
-import dev.zlt.companion.data.SettingsStore
-import dev.zlt.companion.data.StatusCache
+import dev.zlt.companion.data.SignalHistory
+import dev.zlt.companion.data.SignalSample
 import dev.zlt.companion.net.NetworkMode
 import dev.zlt.companion.net.ZltException
 import kotlinx.coroutines.Job
@@ -30,6 +30,8 @@ data class StatusUiState(
     val refreshing: Boolean = false,
     /** The mode being applied right now, if any. */
     val changingMode: NetworkMode? = null,
+    /** The walk-test trace, oldest first. */
+    val history: List<SignalSample> = emptyList(),
 ) {
     companion object {
         /**
@@ -44,9 +46,10 @@ data class StatusUiState(
 
 class RouterViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val settingsStore = SettingsStore(application)
-    private val repository = RouterRepository.from(settingsStore)
-    private val statusCache = StatusCache(application)
+    private val container = AppContainer.get(application)
+    private val settingsStore = container.settingsStore
+    private val repository = container.repository
+    private val statusCache = container.statusCache
 
     val settings: StateFlow<RouterSettings?> = settingsStore.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -87,6 +90,14 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
                 if (!demoMode) {
                     statusCache.store(snapshot.status.reading)
                 }
+                val now = System.currentTimeMillis()
+                // With no service the device echoes stale figures (see
+                // RouterStatus), so the trace records a gap rather than them.
+                val sample = if (snapshot.status.hasService) {
+                    SignalSample(now, snapshot.status.rsrpDbm, snapshot.status.rssiDbm)
+                } else {
+                    SignalSample(now, null, null)
+                }
                 _state.update {
                     it.copy(
                         status = snapshot.status,
@@ -94,9 +105,10 @@ class RouterViewModel(application: Application) : AndroidViewModel(application) 
                         // one (no session), rather than blanking the card.
                         mode = snapshot.mode ?: it.mode,
                         error = null,
-                        lastUpdatedEpochMs = System.currentTimeMillis(),
+                        lastUpdatedEpochMs = now,
                         everLoaded = true,
                         refreshing = false,
+                        history = SignalHistory.append(it.history, sample),
                     )
                 }
             } catch (e: ZltException) {

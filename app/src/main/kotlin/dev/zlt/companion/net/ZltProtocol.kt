@@ -52,6 +52,105 @@ object ZltProtocol {
 }
 
 /**
+ * USSD, ported from the USSD block at the top of zlt/client.py.
+ *
+ * Captured live from the device's own js/service.js: a POST starts the
+ * session, then `ussd_write_flag` is polled on its own until it reports a reply
+ * is ready, and the reply is fetched with `ussd_data_info`, also on its own.
+ * Both reads are aggregate cmds that must not be batched with anything else.
+ */
+object UssdProtocol {
+    const val GOFORM = "USSD_PROCESS"
+    const val OPERATOR_FIELD = "USSD_operator"
+    const val SEND_FIELD = "USSD_send_number"
+    const val REPLY_FIELD = "USSD_reply_number"
+    const val OP_SEND = "ussd_send"
+    const val OP_REPLY = "ussd_reply"
+    const val OP_CANCEL = "ussd_cancel"
+
+    const val FLAG_KEY = "ussd_write_flag"
+    const val DATA_CMD = "ussd_data_info"
+    const val DATA_FIELD = "ussd_data"
+    const val ACTION_FIELD = "ussd_action"
+    const val DCS_FIELD = "ussd_dcs"
+
+    const val FLAG_PENDING = "15"
+    const val FLAG_RECEIVED = "16"
+    val FLAG_TIMEOUT = setOf("3", "4", "unknown")
+    val FLAG_ERRORS = mapOf(
+        "1" to "no service",
+        "2" to "network terminated",
+        "10" to "retry",
+        "41" to "operation not supported",
+        "99" to "unsupported",
+    )
+
+    /** `ussd_action` "1" means the network wants a reply; "0" is final. */
+    const val ACTION_PROMPT = "1"
+
+    /** `(dcs & 0x0C) == 0x08` means UCS2, e.g. 0x48 ("72"). */
+    const val DCS_UCS2_MASK = 0x0C
+    const val DCS_UCS2_VALUE = 0x08
+
+    const val TIMEOUT_MS = 20_000L
+    const val POLL_INTERVAL_MS = 1_000L
+}
+
+/**
+ * SMS, ported from the SMS block at the top of zlt/client.py and
+ * docs/protocol.md. All of it needs a session.
+ */
+object SmsProtocol {
+    /** Aggregate cmd that takes its own query parameters alongside `cmd`. */
+    const val LIST_CMD = "sms_data_total"
+    const val STATUS_CMD = "sms_cmd_status_info"
+
+    // Read parameters. data_per_page is advisory: the device answered ten rows
+    // when asked for three, so the cap is applied again client-side.
+    const val MEM_STORE = "1"
+    const val TAGS_ALL = "10"
+    const val ORDER_BY = "order by id desc"
+    const val PAGE_SIZE = "500"
+
+    /** `tag` "1" is an unread inbox message; 2, 3 and 4 are outgoing folders. */
+    const val TAG_UNREAD = "1"
+    val TAGS_OUTGOING = setOf("2", "3", "4")
+
+    const val SEND_GOFORM = "SEND_SMS"
+    /** A new message rather than an edited draft. */
+    const val NEW_ID = "-1"
+    const val SEND_SLOT = "4"
+
+    const val READ_GOFORM = "SET_MSG_READ"
+    const val READ_TAG = "0"
+    const val DELETE_GOFORM = "DELETE_SMS"
+    const val DELETE_SLOT = "6"
+
+    const val STATUS_FIELD = "sms_cmd_status_result"
+    const val STATUS_FAILED = "2"
+    const val STATUS_DONE = "3"
+
+    const val ENCODE_GSM7 = "GSM7_default"
+    const val ENCODE_UNICODE = "UNICODE"
+
+    /** The stock UI waits this long before its first status poll. */
+    const val SETTLE_MS = 1_000L
+    const val TIMEOUT_MS = 30_000L
+    const val POLL_INTERVAL_MS = 3_000L
+
+    /**
+     * GSM 03.38 basic set, lifted verbatim from the device's GSM7_Table. A body
+     * made entirely of these goes out as GSM7 (160 characters per part);
+     * anything else has to be UNICODE (70 per part), so this decides the cost.
+     */
+    const val GSM7_CHARS =
+        "\n\u000c\r !\"#\$%&'()*+,-./0123456789:;<=>?@" +
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" +
+            "abcdefghijklmnopqrstuvwxyz{|}~" +
+            "\u00a0¡£¤¥§¿ÄÅÆÇÉÑÖØÜßàäåæèéìñòöøùüΓΔΘΛΞΠΣΦΨΩ€"
+}
+
+/**
  * The five distinct BearerPreference values the device accepts. The Python maps
  * eight friendly aliases onto these; the app only needs the canonical five, each
  * with the label the stock web UI uses.
@@ -110,3 +209,13 @@ class LockedOut(
 
 /** The router answered a write with something other than success. */
 class RouterRejected(message: String) : ZltException(message)
+
+/**
+ * The device answered a USSD or SMS read in a shape this app does not know.
+ * Raised rather than polling to a timeout or showing an empty inbox, because it
+ * means the firmware speaks a different API from the one captured.
+ */
+class UnsupportedResponse(message: String) : ZltException(message)
+
+/** An SMS could not be sent, marked read or deleted. */
+class SmsFailed(message: String) : ZltException(message)

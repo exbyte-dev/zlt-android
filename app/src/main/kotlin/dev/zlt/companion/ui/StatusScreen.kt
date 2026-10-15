@@ -13,7 +13,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,124 +39,68 @@ import java.util.Date
 @Composable
 fun StatusScreen(
     state: StatusUiState,
-    host: String,
-    demoMode: Boolean,
     onRefresh: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onExitDemo: () -> Unit,
     modeControl: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Header(host = host, onOpenSettings = onOpenSettings)
-
-            // Persistent, not dismissable: sample readings must never be
-            // mistaken for what the router is actually doing.
-            if (demoMode) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(start = 14.dp, end = 4.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.demo_banner),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(vertical = 12.dp),
-                        )
-                        TextButton(onClick = onExitDemo) {
-                            Text(stringResource(R.string.demo_exit))
-                        }
-                    }
-                }
-            }
-
-            state.error?.let { message ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(14.dp),
-                    )
-                }
-            }
-
-            SignalCard(reading = state.status?.reading, everLoaded = state.everLoaded)
-
-            state.status?.let { status ->
-                ConnectionCard(status.connection)
-                ModeCard(mode = state.mode, control = modeControl)
-
-                if (!status.authed) {
-                    Text(
-                        text = stringResource(R.string.status_open_data_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                DetailsSection(status)
-            }
-
-            Row(
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        state.error?.let { message ->
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                ),
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = state.lastUpdatedEpochMs?.let {
-                        stringResource(R.string.status_updated, formatTime(it))
-                    } ?: stringResource(R.string.status_checking),
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(14.dp),
+                )
+            }
+        }
+
+        SignalCard(reading = state.status?.reading, everLoaded = state.everLoaded)
+
+        if (state.everLoaded) {
+            WalkTestCard(history = state.history, reading = state.status?.reading)
+        }
+
+        state.status?.let { status ->
+            ConnectionCard(status.connection)
+            ModeCard(mode = state.mode, control = modeControl)
+
+            if (!status.authed) {
+                Text(
+                    text = stringResource(R.string.status_open_data_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                TextButton(onClick = onRefresh, enabled = !state.refreshing) {
-                    Text(stringResource(R.string.status_refresh))
-                }
             }
+            DetailsSection(status)
         }
-    }
-}
 
-@Composable
-private fun Header(host: String, onOpenSettings: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                text = stringResource(R.string.device_name),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = host,
+                text = state.lastUpdatedEpochMs?.let {
+                    stringResource(R.string.status_updated, formatTime(it))
+                } ?: stringResource(R.string.status_checking),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-        }
-        TextButton(onClick = onOpenSettings) {
-            Text(stringResource(R.string.settings_open))
+            TextButton(onClick = onRefresh, enabled = !state.refreshing) {
+                Text(stringResource(R.string.status_refresh))
+            }
         }
     }
 }
@@ -350,7 +293,7 @@ private fun DetailRow(label: String, value: String?, empty: String) {
     }
 }
 
-private fun qualityWord(level: SignalLevel): Int = when (level) {
+fun qualityWord(level: SignalLevel): Int = when (level) {
     SignalLevel.EXCELLENT -> R.string.quality_excellent
     SignalLevel.GOOD -> R.string.quality_good
     SignalLevel.FAIR -> R.string.quality_fair

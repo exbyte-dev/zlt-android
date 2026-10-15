@@ -70,7 +70,23 @@ class ZltClient(
         vararg cmds: String,
         multi: Boolean? = null,
         extra: Map<String, String> = emptyMap(),
-    ): Map<String, String> {
+    ): Map<String, String> = flatten(getObjectUnlocked(*cmds, multi = multi, extra = extra))
+
+    /**
+     * As [get], but the response object is handed back whole. The SMS inbox is
+     * the one read whose payload is nested (a `messages` array), which the flat
+     * map would reduce to an empty string.
+     */
+    suspend fun getObject(
+        vararg cmds: String,
+        extra: Map<String, String> = emptyMap(),
+    ): JsonObject = mutex.withLock { getObjectUnlocked(*cmds, extra = extra) }
+
+    private suspend fun getObjectUnlocked(
+        vararg cmds: String,
+        multi: Boolean? = null,
+        extra: Map<String, String> = emptyMap(),
+    ): JsonObject {
         val query = StringBuilder("isTest=false")
         // The cmd separator goes out percent-encoded as %2C. That is what the
         // Python sends (requests url-encodes commas) and what the device's own
@@ -87,7 +103,7 @@ class ZltClient(
             .headers(deviceHeaders())
             .get()
             .build()
-        return parseFlatJson(execute(request))
+        return parseObject(execute(request))
     }
 
     /**
@@ -223,7 +239,7 @@ class ZltClient(
             .headers(deviceHeaders())
             .post(encoded.toRequestBody(FORM_MEDIA_TYPE))
             .build()
-        return parseFlatJson(execute(request))
+        return flatten(parseObject(execute(request)))
     }
 
     // --- plumbing ------------------------------------------------------------
@@ -249,12 +265,8 @@ class ZltClient(
         }
     }
 
-    /**
-     * The device answers with a flat JSON object of string values. Nested values
-     * (the SMS inbox is the one case) are not used here and flatten to empty
-     * rather than failing the whole read.
-     */
-    private fun parseFlatJson(body: String): Map<String, String> {
+    /** Any response that is not a JSON object is not the router talking. */
+    private fun parseObject(body: String): JsonObject {
         val element = try {
             json.parseToJsonElement(body)
         } catch (e: Exception) {
@@ -263,14 +275,27 @@ class ZltClient(
                     "Check that ${credentials.host} is really the router's address.",
             )
         }
-        val obj = element as? JsonObject ?: throw RouterUnreachable(
+        return element as? JsonObject ?: throw RouterUnreachable(
             "The router sent back an unexpected response.",
         )
-        return obj.mapValues { (_, value) -> (value as? JsonPrimitive)?.content ?: "" }
     }
 
-    /** quote_plus semantics, matching what Python's requests sends. */
-    private fun encode(value: String): String = URLEncoder.encode(value, "UTF-8")
+    /**
+     * The device answers with a flat JSON object of string values. Nested values
+     * flatten to empty rather than failing the whole read; [getObject] is the
+     * way to read those.
+     */
+    private fun flatten(obj: JsonObject): Map<String, String> =
+        obj.mapValues { (_, value) -> (value as? JsonPrimitive)?.content ?: "" }
+
+    /**
+     * quote_plus semantics, matching what Python's requests sends. URLEncoder
+     * differs from it on two characters: it leaves `*` bare and encodes `~`.
+     * Both are put back the Python's way, since `*` opens every USSD code and
+     * the Python's encoding is the one verified against the device.
+     */
+    private fun encode(value: String): String =
+        URLEncoder.encode(value, "UTF-8").replace("*", "%2A").replace("%7E", "~")
 
     companion object {
         const val DEFAULT_TIMEOUT_SECONDS = 8L

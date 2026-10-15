@@ -265,6 +265,25 @@ class ZltClientTest {
     }
 
     @Test
+    fun `asterisk and tilde are encoded as python's quote_plus does`() = runTest {
+        router.values["token"] = "1"
+        router.queuePost("success")
+
+        router.client().post("SOME_ACTION", mapOf("value" to "*310#~"))
+
+        assertTrue(router.postsSeen.first().contains("value=%2A310%23~"))
+    }
+
+    @Test
+    fun `getObject keeps nested values the flat read drops`() = runTest {
+        router.answerRawGet("{\"messages\":[{\"id\":\"1\"}]}")
+        val client = router.client()
+
+        assertEquals("", client.get("sms_data_total")["messages"])
+        assertTrue(client.getObject("sms_data_total")["messages"] is kotlinx.serialization.json.JsonArray)
+    }
+
+    @Test
     fun `forgetSession drops the cookie`() = runTest {
         router.values += mapOf(
             "psw_fail_num_str" to "5", "random_login" to "12345678", "get_token" to "",

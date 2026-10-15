@@ -6,8 +6,17 @@ import dev.zlt.companion.net.LoginFailed
 import dev.zlt.companion.net.NetworkMode
 import dev.zlt.companion.net.RouterCredentials
 import dev.zlt.companion.net.RouterRejected
+import dev.zlt.companion.net.SmsMessage
+import dev.zlt.companion.net.UssdResult
 import dev.zlt.companion.net.ZltClient
 import dev.zlt.companion.net.ZltProtocol
+import dev.zlt.companion.net.smsDelete
+import dev.zlt.companion.net.smsList
+import dev.zlt.companion.net.smsMarkRead
+import dev.zlt.companion.net.smsSend
+import dev.zlt.companion.net.ussdCancel
+import dev.zlt.companion.net.ussdReply
+import dev.zlt.companion.net.ussdSend
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -136,6 +145,27 @@ class RouterRepository(
         }
         return NetModeState.from(client.get(*ZltProtocol.NET_KEYS.toTypedArray()))
     }
+
+    // --- SMS -----------------------------------------------------------------
+    // Thin on purpose: the protocol lives in net/ZltSms.kt. These exist because
+    // the repository owns the client, so every screen shares one session.
+
+    /** The inbox, newest first. */
+    suspend fun inbox(): List<SmsMessage> = client().smsList()
+
+    suspend fun sendSms(number: String, text: String) = client().smsSend(number, text)
+
+    suspend fun markRead(ids: Collection<String>): Int = client().smsMarkRead(ids)
+
+    suspend fun deleteSms(ids: Collection<String>): Int = client().smsDelete(ids)
+
+    // --- USSD ----------------------------------------------------------------
+
+    suspend fun ussdSend(code: String): UssdResult = client().ussdSend(code)
+
+    suspend fun ussdReply(text: String): UssdResult = client().ussdReply(text)
+
+    suspend fun ussdCancel() = client().ussdCancel()
 
     companion object {
         /**

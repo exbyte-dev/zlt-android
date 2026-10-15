@@ -1,5 +1,6 @@
 package dev.zlt.companion.tile
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.drawable.Icon
@@ -7,11 +8,9 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import dev.zlt.companion.R
+import dev.zlt.companion.data.AppContainer
 import dev.zlt.companion.data.CachedSignal
-import dev.zlt.companion.data.RouterRepository
-import dev.zlt.companion.data.SettingsStore
 import dev.zlt.companion.data.SignalLevel
-import dev.zlt.companion.data.StatusCache
 import dev.zlt.companion.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,9 +39,10 @@ class SignalTileService : TileService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var refreshJob: Job? = null
 
-    private val settingsStore by lazy { SettingsStore(applicationContext) }
-    private val repository by lazy { RouterRepository.from(settingsStore) }
-    private val cache by lazy { StatusCache(applicationContext) }
+    private val container by lazy { AppContainer.get(applicationContext) }
+    private val settingsStore get() = container.settingsStore
+    private val repository get() = container.repository
+    private val cache get() = container.statusCache
 
     override fun onStartListening() {
         super.onStartListening()
@@ -98,7 +98,10 @@ class SignalTileService : TileService() {
                 ),
             )
         } else {
+            // Only reached below Android 14, where this overload is the one
+            // that exists; lint cannot see the version check above.
             @Suppress("DEPRECATION")
+            @SuppressLint("StartActivityAndCollapseDeprecated")
             startActivityAndCollapse(intent)
         }
     }

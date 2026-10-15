@@ -25,7 +25,7 @@
     <string name="settings_back">Back</string>
     <string name="settings_refresh_rate">Check every</string>
     <string name="settings_seconds">%1$d seconds</string>
-    <string name="settings_privacy_note">This app only talks to your router. It sends nothing anywhere else.</string>
+    <string name="settings_privacy_note">This app talks to your router, and to a public speed test server only when you run a speed test. It sends nothing anywhere else.</string>
 
     <!-- Status screen -->
     <string name="status_signal">Signal</string>
@@ -77,6 +77,111 @@
     <string name="demo_explain">See how the app looks using sample readings. Nothing is sent anywhere.</string>
     <string name="demo_banner">Demo mode — these are sample readings, not your router.</string>
     <string name="demo_exit">Leave demo</string>
+
+    <!-- Navigation -->
+    <string name="tab_signal">Signal</string>
+    <string name="tab_messages">Messages</string>
+    <string name="tab_ussd">USSD</string>
+    <string name="tab_speed">Speed</string>
+    <string name="tab_messages_unread">Messages, %1$d unread</string>
+
+    <!-- Walk test -->
+    <string name="walk_title">Walk test</string>
+    <string name="walk_caption_rsrp">RSRP, with RSSI in grey · last 15 minutes</string>
+    <string name="walk_caption_rssi">RSSI · last 15 minutes</string>
+    <string name="walk_waiting">Carry the router around and the line follows the signal. It fills in as readings arrive.</string>
+    <string name="walk_description">Signal over the last 15 minutes</string>
+
+    <!-- Messages -->
+    <string name="sms_title">Messages</string>
+    <string name="sms_unread_count">%1$d unread</string>
+    <string name="sms_refresh">Refresh</string>
+    <string name="sms_select">Select</string>
+    <string name="sms_done">Done</string>
+    <string name="sms_select_all">Select all</string>
+    <string name="sms_select_none">Select none</string>
+    <string name="sms_selected_count">%1$d selected</string>
+    <string name="sms_mark_read">Mark read</string>
+    <string name="sms_delete">Delete</string>
+    <string name="sms_delete_body">They are removed from the router for good. There is no undo.</string>
+    <string name="sms_delete_confirm">Delete</string>
+    <string name="sms_cancel">Cancel</string>
+    <string name="sms_new">New message</string>
+    <string name="sms_to">To</string>
+    <string name="sms_to_hint">Phone number or short code</string>
+    <string name="sms_body">Message</string>
+    <string name="sms_send">Send</string>
+    <string name="sms_reply">Reply</string>
+    <string name="sms_cost_note">Sent from the router\'s SIM, so normal SMS charges apply.</string>
+    <string name="sms_to_prefix">To %1$s</string>
+    <string name="sms_empty">No messages on the router.</string>
+    <string name="sms_loading">Reading the inbox…</string>
+    <string name="sms_sending">Sending…</string>
+    <string name="sms_marking">Marking read…</string>
+    <string name="sms_deleting">Deleting…</string>
+    <string name="sms_sent">Sent</string>
+    <string name="sms_unread_marker">Unread</string>
+    <string name="sms_length">%1$s · %2$s</string>
+    <string name="sms_length_unicode">%1$s · %2$s · special characters, so 70 per part</string>
+    <plurals name="sms_characters">
+        <item quantity="one">%d character</item>
+        <item quantity="other">%d characters</item>
+    </plurals>
+    <plurals name="sms_parts">
+        <item quantity="one">%d part</item>
+        <item quantity="other">%d parts</item>
+    </plurals>
+    <plurals name="sms_delete_title">
+        <item quantity="one">Delete %d message?</item>
+        <item quantity="other">Delete %d messages?</item>
+    </plurals>
+    <plurals name="sms_marked">
+        <item quantity="one">Marked %d message read</item>
+        <item quantity="other">Marked %d messages read</item>
+    </plurals>
+    <plurals name="sms_deleted">
+        <item quantity="one">Deleted %d message</item>
+        <item quantity="other">Deleted %d messages</item>
+    </plurals>
+
+    <!-- USSD -->
+    <string name="ussd_title">USSD codes</string>
+    <string name="ussd_intro">Dial a code like *310# through the router\'s SIM and read the reply here.</string>
+    <string name="ussd_code">Code</string>
+    <string name="ussd_send">Send</string>
+    <string name="ussd_waiting">Waiting for the network…</string>
+    <string name="ussd_reply_label">Your reply</string>
+    <string name="ussd_reply">Reply</string>
+    <string name="ussd_end">End session</string>
+    <string name="ussd_timeout">No response from the network.</string>
+    <string name="ussd_error">USSD error: %1$s</string>
+    <string name="ussd_cancelled">Session ended.</string>
+    <string name="ussd_saved">Saved codes</string>
+    <string name="ussd_saved_empty">Codes you save show up here as one-tap buttons.</string>
+    <string name="ussd_manage">Manage</string>
+    <string name="ussd_manage_done">Done</string>
+    <string name="ussd_save_label">Name</string>
+    <string name="ussd_save_label_hint">e.g. Balance</string>
+    <string name="ussd_save">Save code</string>
+    <string name="ussd_remove">Remove %1$s</string>
+    <string name="ussd_save_needs_both">Give the code a name and the code itself.</string>
+
+    <!-- Speed test -->
+    <string name="speed_title">Speed test</string>
+    <string name="speed_ping">Ping</string>
+    <string name="speed_download">Download</string>
+    <string name="speed_upload">Upload</string>
+    <string name="speed_ms">%1$d ms</string>
+    <string name="speed_mbps">%1$s Mbps</string>
+    <string name="speed_run">Run test</string>
+    <string name="speed_stop">Stop</string>
+    <string name="speed_measuring_ping">Measuring latency…</string>
+    <string name="speed_measuring_down">Downloading…</string>
+    <string name="speed_measuring_up">Uploading…</string>
+    <string name="speed_finished">Finished %1$s</string>
+    <string name="speed_explain">Measures this phone\'s connection, so join the router\'s Wi-Fi first to test the router. Each direction stops after a few seconds, using up to about 33 MB of data on a fast link.</string>
+    <string name="speed_server_note">This is the one feature that connects to anything but your router: it downloads from and uploads to speed.cloudflare.com, and only when you press Run.</string>
+    <string name="speed_demo_off">The speed test is off in demo mode, because it would measure your real connection rather than a sample.</string>
 
     <!-- Lockout warning, shown wherever a password is entered -->
     <string name="lockout_warning">The router locks you out for a few minutes after five wrong passwords, so double-check it before saving.</string>
