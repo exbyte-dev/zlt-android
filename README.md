@@ -2,7 +2,9 @@
 
 An Android companion app for the **ZLT T10D MAX** 4G router. Shows signal
 strength, connection state and the current network mode, and lets you switch
-between network modes. Includes a Quick Settings tile for signal at a glance.
+between network modes. Reads and sends SMS on the router's SIM, dials USSD
+codes, and runs a speed test. Includes a Quick Settings tile for signal at a
+glance.
 
 > **Disclaimer:** This is an independent, reverse-engineered client. It is **not
 > affiliated with, endorsed by, or supported by ZTE, MTN, or any carrier**. The
@@ -16,24 +18,51 @@ where the protocol was reverse-engineered and live-verified. That project's
 
 ## What it does
 
-- One screen: signal strength as bars and a plain word, the dBm figure and the
-  rest of the readings secondary
-- Switch network mode between Automatic, 4G only, 4G and 3G, 3G only, 2G only
+Four tabs, mirroring the Python project's web dashboard:
+
+- **Signal:** strength as bars and a plain word, the dBm figure and the rest of
+  the readings secondary. A walk-test trace of the last 15 minutes of RSRP and
+  RSSI, so you can carry the router around and watch the line respond. Switch
+  network mode between Automatic, 4G only, 4G and 3G, 3G only, 2G only.
+- **Messages:** the router's SMS inbox, with unread marked and counted on the
+  tab. Compose (with a part count, since special characters cut a part from
+  160 characters to 70), reply, and a Select mode to mark read or delete in
+  one go. Deleting asks first.
+- **USSD:** send a code, read the reply, answer menus, end the session. Saved
+  codes are one-tap buttons; Manage adds and removes them. They are stored in
+  the same `[{"label", "code"}]` shape as zltrouter's `ussd.json`.
+- **Speed:** ping, download and upload, run from the phone, against
+  Cloudflare's public speed test. Time-boxed both ways, as the dashboard's is.
+
+The signal readout stays in the top bar on every tab, and the poll keeps
+running whichever tab is open, so the walk test stays continuous.
+
+Also:
+
 - A Quick Settings tile showing signal strength; tapping it opens the app
 - Router address and password entered in the app and kept on the device
-- A demo mode, so the app can be seen working without a router at all
+- A demo mode, so the app can be seen working without a router at all. It
+  covers messages and USSD menus too.
 
-That is the whole of v1. No SMS, no USSD, no speed test — the Python project
-does all of those.
+What the Python project still has that this does not: the raw `get` / `post`
+passthrough, and running itself as a service. Neither makes sense on a phone.
 
 ## Network behaviour
 
-The app talks to your router and to nothing else. There is no analytics, no
-crash reporting and no telemetry, and the dependency list is AndroidX, Kotlin,
-OkHttp and kotlinx-serialization — nothing that reports usage anywhere.
-`INTERNET` is the only permission it declares.
+The app talks to your router, and to Cloudflare's speed test server only while
+a speed test runs. There is no analytics, no crash reporting and no telemetry,
+and the dependency list is AndroidX, Kotlin, OkHttp and kotlinx-serialization —
+nothing that reports usage anywhere. `INTERNET` is the only permission it
+declares. SMS and USSD go through the router's SIM, so the app needs none of
+Android's SMS or phone permissions.
 
-Demo mode makes no network connections at all. `DemoTransport` is an OkHttp
+The speed test is the one exception to "router only", and it is narrow: it runs
+when you press Run and at no other time, over HTTPS, exchanging filler bytes
+with `speed.cloudflare.com`. That is the dashboard's default target and the
+reason is the same: a speed test has to measure *something* on the internet.
+The cleartext rules below do not loosen for it.
+
+Demo mode makes no network connections at all, and switches the speed test off. `DemoTransport` is an OkHttp
 interceptor that answers the `reqproc` calls in-process, plugged into the
 `baseClient` parameter `ZltClient` already takes — so the login handshake, the
 parsing, the repository and the whole UI run exactly as they do against real
@@ -124,11 +153,15 @@ and cannot be changed afterwards.
 
 ```
 net/    The protocol port. ZltAuth (login encoding), ZltClient (proc_get,
-        proc_post, session, lockout guard), ZltProtocol (every device-specific
-        constant), HostValidation, DemoTransport (the canned router).
+        proc_post, session, lockout guard), ZltSms and ZltUssd (extensions
+        over ZltClient), DeviceText (UCS2 / GSM7 / msg_id encodings),
+        ZltProtocol (every device-specific constant), HostValidation,
+        DemoTransport (the canned router).
 data/   SettingsStore and the Keystore cipher, RouterRepository, the signal
-        quality thresholds, StatusCache for the tile.
-ui/     Compose screens and the ViewModel.
+        quality thresholds, StatusCache for the tile, saved USSD codes, the
+        walk-test history, AppContainer (the one shared repository).
+speed/  The speed test. Not router protocol, so kept out of net/.
+ui/     Compose screens and their ViewModels, one per tab.
 tile/   The Quick Settings tile.
 ```
 
@@ -160,11 +193,27 @@ and nowhere else.
   missing from the response and re-reads them separately.
 - **With `network_type: No Service` the device still echoes a stale `rssi` and
   `signalbar`.** Those are ignored for the headline reading and shown only under
-  Details.
+  Details, and the walk test records a gap rather than them.
+- **Every screen and the tile share one `RouterRepository`** (`AppContainer`),
+  so one `ZltClient` and one session cookie. Separate clients would each log in
+  on their own, against a device that counts logins.
+- **SMS and USSD hold the client's mutex per request, not per exchange.** A
+  send that waits thirty seconds on the network does not freeze the signal
+  poll. Their polls count waits rather than reading a clock, so the bounds are
+  the Python's and the tests run under virtual time.
+- **`*` goes out as `%2A`.** `URLEncoder` leaves it bare; Python's
+  `quote_plus`, which is what was verified against the device, does not. Every
+  USSD code starts with one.
+- **The SMS inbox is the one nested response.** `get` flattens; `getObject`
+  does not.
+- **The unread count comes from the rows**, never `sms_unread_num`, which was
+  seen reporting 0 with unread rows in the inbox.
 
 ## Testing
 
-71 unit tests, all on the JVM — no device or emulator needed.
+166 unit tests, all on the JVM — no device or emulator needed. The SMS and
+USSD tests port `test_client_sms.py` and `test_client_ussd.py` case for case,
+using the same captured vectors.
 
 ```sh
 ./gradlew testDebugUnitTest
@@ -187,3 +236,13 @@ rename breaks a test rather than moving both sides at once.
   states to work from.
 - **IPv4 addresses only**, no hostnames and no port. The router is reached by
   address on the LAN.
+- **The walk test only records while the app is open**, for the same reason
+  the tile is not live: nothing polls in the background. Leave the app on
+  screen while you walk.
+- **SMS and USSD are ported, not yet verified from the app on hardware.** The
+  wire format is the Python's, which is live-verified, and the tests pin it to
+  the Python's own vectors, but the first real send from a phone is still a
+  first. The outgoing-message tags (2, 3, 4) are the stock UI's folder mapping
+  and were never exercised on the Python side either.
+- **The speed test measures the phone, not the router.** Join the router's
+  Wi-Fi first; on mobile data it measures the phone's own connection.

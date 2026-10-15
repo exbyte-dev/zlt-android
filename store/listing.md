@@ -4,7 +4,7 @@
 Router Signal — for ZLT T10D
 
 ## Short description (80 char max)
-Your 4G router's signal at a glance, and switch network mode from your phone.
+Your 4G router's signal, SMS inbox, USSD codes and speed test, on your phone.
 
 ## Full description (4000 char max)
 Router Signal shows you what your 4G router is doing, without waiting on its slow
@@ -14,16 +14,23 @@ built-in web page.
   with the dBm figure there when you want it
 • Whether the internet is actually connected
 • Switch the network mode: Automatic, 4G only, 4G and 3G, 3G only, 2G only
+• A walk test: a 15-minute signal trace, so you can carry the router around
+  and find the best spot
+• Read, send, mark read and delete the text messages on the router's SIM
+• Dial USSD codes such as balance checks, answer their menus, and save the ones
+  you use as one-tap buttons
+• A speed test for download, upload and ping
 • A Quick Settings tile so signal is one swipe away
 • Full details when you want them: RSRP, RSSI, band, SNR, RSRQ and cell ID
 
 Built for the ZLT T10D MAX (ZTE NV8645). It talks to your router over your own
-Wi-Fi and to nothing else — no accounts, no analytics, no crash reporting, no
-telemetry of any kind. Your router's password is encrypted with a key held in the
-Android Keystore and never leaves your phone.
+Wi-Fi — no accounts, no analytics, no crash reporting, no telemetry of any kind.
+The only other thing it ever contacts is Cloudflare's public speed test server,
+and only while you run a speed test. Your router's password is encrypted with a
+key held in the Android Keystore and never leaves your phone.
 
 No router? Tap "Try it without a router" to see the whole app running on sample
-readings.
+readings, messages and USSD menus.
 
 Router Signal is an independent app. It is not affiliated with, endorsed by, or
 supported by ZTE, MTN, or any carrier or manufacturer. It works with hardware it
@@ -40,12 +47,16 @@ screen — this runs the entire app against built-in sample readings.
 - Is all of the user data collected by your app encrypted in transit? N/A — no data collected
 - Do you provide a way for users to request that their data is deleted? N/A — no data collected
 
-The router password is stored on-device only and is never collected or
-transmitted, so it is not declared as collected data.
+The router password and saved USSD codes are stored on-device only and are never
+collected or transmitted, so they are not declared as collected data. SMS
+messages are read from the user's own router for display and are not stored or
+transmitted anywhere by the app. The speed test exchanges filler data with
+speed.cloudflare.com when the user runs it; no user data is part of it.
 
 ## Content rating
-Category: Utility. No user-generated content, no ads, no in-app purchases, no
-social features, no location, no data collection.
+Category: Utility. No ads, no in-app purchases, no social features, no location,
+no data collection. SMS and USSD go through the user's own router SIM to their own
+mobile network; nothing is shared with other users of the app.
 
 ## Category
 Tools
